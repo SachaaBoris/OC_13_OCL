@@ -4,6 +4,10 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
+    """
+    Initial database migration for the Profiles app.
+    Creates the 'Profile' model with its respective fields and constraints.
+    """
 
     initial = True
 

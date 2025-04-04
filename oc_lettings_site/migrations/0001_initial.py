@@ -7,6 +7,10 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
+    """
+    Initial database migration for the main app.
+    Creates the 'Address', 'Profile' and 'Letting' models with their respective fields and constraints.
+    """
 
     initial = True
 

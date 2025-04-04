@@ -9,3 +9,10 @@ urlpatterns = [
     path('profiles/', include('profiles.urls', namespace='profiles')),
     path('admin/', admin.site.urls),
 ]
+"""
+URL configuration for the main app.
+- '' → Calls the index view and 
+- 'lettings/' → Calls the lettings view and lists all lettings.
+- 'profiles/' → Calls the profiles view and lists all profiles.
+- 'admin/' → Calls the admin view.
+"""

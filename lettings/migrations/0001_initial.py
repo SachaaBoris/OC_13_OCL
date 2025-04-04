@@ -4,6 +4,10 @@ import django.core.validators
 
 
 class Migration(migrations.Migration):
+    """
+    Initial database migration for the Lettings app.
+    Creates the 'Address' and 'Letting' models with their respective fields and constraints.
+    """
 
     initial = True
 
