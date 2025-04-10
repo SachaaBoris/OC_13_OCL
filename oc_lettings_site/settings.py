@@ -9,25 +9,23 @@ from sentry_sdk.integrations.django import DjangoIntegration
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 
-# Charger les variables d'environnement à partir du fichier .env
+# Load environment variables
 load_dotenv()
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+env_str = "production"
+if DEBUG:
+    env_str = "development"
 
 
 # Load Sentry
 sentry_sdk.init(
-    '''
-    You can find Sentry capturing triggers in :
-    - app.models
-    - app.views
-    - oc_lettings_site.signals
-    '''
+    # You can find Sentry log triggers in :
+    # - app.models
+    # - app.views
+    # - oc_lettings_site.signals
     dsn=os.getenv('SENTRY_DSN'),
     integrations=[DjangoIntegration()],
-
-    # Specific environments definition
-    environment="production",
-
-    # Capture debug local data
+    environment=env_str,
     send_default_pii=True
 )
 
@@ -40,12 +38,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-ALLOWED_HOSTS = []
-
-
 # Application definition
+ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'oc_lettings_site.apps.OCLettingsSiteConfig',
@@ -128,3 +122,16 @@ USE_TZ = True
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
+
+# Production safety switch
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True  # Force redirection from HTTP to HTTPS
+    SESSION_COOKIE_SECURE = True  # Prevents sessions from being stolen via unsecure HTTP
+    CSRF_COOKIE_SECURE = True  # Prevents sessions from being stolen via unsecure HTTP
+    SECURE_BROWSER_XSS_FILTER = True  # Added injection script protection
+    SECURE_CONTENT_TYPE_NOSNIFF = True  # Added injection script protection
+    X_FRAME_OPTIONS = 'DENY'  # Added clickjacking protection
+    #SECURE_HSTS_SECONDS = 31536000  # 1 year HTTPS token
+    #SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Adds subdomains
+    #SECURE_HSTS_PRELOAD = True  # Appends the preload directive to the Strict-Transport-Security header
