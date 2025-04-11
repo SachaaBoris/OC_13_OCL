@@ -5,7 +5,7 @@ from django.test import TestCase
 
 def load_migration_module():
     """
-    Charge dynamiquement le module de migration.
+    Dynamically loads the migration module.
     """
     migration_path = os.path.join('profiles', 'migrations', '0002_migrate_data.py')
     spec = importlib.util.spec_from_file_location("migration_module", migration_path)
@@ -16,20 +16,20 @@ def load_migration_module():
 
 class MockModel:
     """
-    Classe de base pour les modèles fictifs utilisés dans les tests.
+    Base class for mock models used in tests.
     """
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def save(self):
-        """Méthode save simulée qui ajoute l'objet au queryset"""
+        """Simulated save method that adds the object to the queryset"""
         self.__class__.objects.queryset.items.append(self)
 
 
 class MockQuerySet:
     """
-    Simule un QuerySet Django.
+    Simulates a Django QuerySet.
     """
     def __init__(self, items=None):
         self.items = items or []
@@ -38,13 +38,13 @@ class MockQuerySet:
         return self.items
 
     def get(self, **kwargs):
-        # Simulation de .get() améliorée
+        # Improved .get() simulation
         pass
 
 
 class MockModelManager:
     """
-    Simule un Manager Django.
+    Simulates a Django Manager.
     """
     def __init__(self, model_class, items=None):
         self.model_class = model_class
@@ -59,14 +59,14 @@ class MockModelManager:
 
 class MockAppRegistry:
     """
-    Simule le registre d'applications Django.
+    Simulates the Django application registry.
     """
     def __init__(self):
         self.models = {}
 
     def register_model(self, app_label, model_name, model_class, instances=None):
         """
-        Enregistre un modèle fictif avec des instances optionnelles.
+        Registers a mock model with optional instances.
         """
         key = (app_label, model_name)
         model_class.objects = MockModelManager(model_class, instances or [])
@@ -74,7 +74,7 @@ class MockAppRegistry:
 
     def get_model(self, app_label, model_name):
         """
-        Récupère un modèle fictif.
+        Retrieves a mock model.
         """
         key = (app_label, model_name)
         return self.models.get(key)
@@ -82,21 +82,21 @@ class MockAppRegistry:
 
 class MockSchemaEditor:
     """
-    Simule le schema editor Django.
+    Simulates the Django schema editor.
     """
     def __init__(self):
         self.deleted_models = []
 
     def delete_model(self, model):
         """
-        Simule la suppression d'un modèle.
+        Simulates model deletion.
         """
         self.deleted_models.append(model)
 
 
 class MockUser:
     """
-    Simule un modèle User Django pour les tests.
+    Simulates a Django User model for tests.
     """
     def __init__(self, id, username):
         self.id = id
@@ -106,29 +106,29 @@ class MockUser:
 
 class TestProfilesMigration(TestCase):
     """
-    Test pour la migration de données des profils entre les applications.
+    Test for profile data migration between applications.
     """
 
     def setUp(self):
         """
-        Configure l'environnement de test avec des modèles et des données fictifs.
+        Sets up the test environment with mock models and data.
         """
-        # Créer des classes de modèles fictifs
+        # Create mock model classes
         class OldProfile(MockModel):
             def save(self):
-                # Surcharge pour assurer l'ajout au queryset
+                # Override to ensure addition to the queryset
                 OldProfile.objects.queryset.items.append(self)
 
         class NewProfile(MockModel):
             def save(self):
-                # Surcharge pour assurer l'ajout au queryset
+                # Override to ensure addition to the queryset
                 NewProfile.objects.queryset.items.append(self)
 
-        # Créer des utilisateurs fictifs
+        # Create mock users
         self.user1 = MockUser(id=1, username="user1")
         self.user2 = MockUser(id=2, username="user2")
 
-        # Créer des profils fictifs
+        # Create mock profiles
         self.old_profile1 = OldProfile(
             id=1,
             pk=1,
@@ -145,10 +145,10 @@ class TestProfilesMigration(TestCase):
             favorite_city="London"
         )
 
-        # Créer le registre d'apps fictif
+        # Create the mock app registry
         self.mock_apps = MockAppRegistry()
 
-        # Enregistrer les modèles avec leurs instances
+        # Register models with their instances
         self.mock_apps.register_model(
             'oc_lettings_site', 'Profile', OldProfile,
             [self.old_profile1, self.old_profile2]
@@ -157,53 +157,53 @@ class TestProfilesMigration(TestCase):
             'profiles', 'Profile', NewProfile, []
         )
 
-        # Créer un schema editor fictif
+        # Create a mock schema editor
         self.mock_schema_editor = MockSchemaEditor()
 
-        # Charger les fonctions de migration
+        # Load migration functions
         self.migration_module = load_migration_module()
         self.forward_func = self.migration_module.forward_func
         self.reverse_func = self.migration_module.reverse_func
 
     def test_forward_migration(self):
         """
-        Test la migration en avant (de oc_lettings_site vers profiles).
+        Tests the forward migration (from oc_lettings_site to profiles).
         """
-        # Appeler la fonction de migration
+        # Call the migration function
         self.forward_func(self.mock_apps, self.mock_schema_editor)
 
-        # Vérifier que les profils ont été créés avec les bonnes données
+        # Verify that profiles were created with the correct data
         new_profiles = self.mock_apps.get_model('profiles', 'Profile').objects.all()
         assert len(new_profiles) == 2, "Le nombre de profils migrés ne correspond pas"
 
-        # Vérifier les attributs du premier profil
+        # Verify the attributes of the first profile
         new_profile1 = next((p for p in new_profiles if p.id == 1), None)
         assert new_profile1 is not None, "Le profil id=1 n'a pas été migré"
         assert new_profile1.favorite_city == "Paris"
         assert new_profile1.user_id == 1
 
-        # Vérifier que l'ancien modèle a été supprimé
+        # Verify that the old model was deleted
         deleted_models = self.mock_schema_editor.deleted_models
         assert len(deleted_models) == 1, "L'ancien modèle de profil n'a pas été supprimé"
 
-        # Vérifier le nom de la classe du modèle supprimé
+        # Verify the class name of the deleted model
         deleted_model_names = [model.__name__ for model in deleted_models]
         assert 'OldProfile' in deleted_model_names
 
     def test_reverse_migration(self):
         """
-        Test la migration inverse (de profiles vers oc_lettings_site).
+        Tests the reverse migration (from profiles to oc_lettings_site).
         """
-        # Configuration des données pour la migration inverse
-        # D'abord, nous devons avoir des données dans le nouveau modèle
+        # Setup data for reverse migration
+        # First, we need to have data in the new model
         NewProfile = self.mock_apps.get_model('profiles', 'Profile')
         OldProfile = self.mock_apps.get_model('oc_lettings_site', 'Profile')
 
-        # Réinitialiser les collections
+        # Reset the collections
         self.mock_apps.register_model('profiles', 'Profile', NewProfile, [])
         self.mock_apps.register_model('oc_lettings_site', 'Profile', OldProfile, [])
 
-        # Créer de nouveaux profils à migrer vers l'ancien modèle
+        # Create new profiles to migrate to the old model
         new_profile1 = NewProfile(
             id=1,
             pk=1,
@@ -218,29 +218,29 @@ class TestProfilesMigration(TestCase):
             favorite_city="London"
         )
 
-        # S'assurer que les profils sont dans le queryset
+        # Ensure the profiles are in the queryset
         NewProfile.objects.queryset.items = [new_profile1, new_profile2]
 
-        # Réinitialiser le schema editor
+        # Reset the schema editor
         self.mock_schema_editor = MockSchemaEditor()
 
-        # Appeler la fonction de migration inverse
+        # Call the reverse migration function
         self.reverse_func(self.mock_apps, self.mock_schema_editor)
 
-        # Vérifier que les profils ont été migrés vers l'ancien modèle
+        # Verify that profiles were migrated to the old model
         old_profiles = OldProfile.objects.all()
         assert len(old_profiles) == 2, "Le nombre de profils migrés vers l'ancien modèle ne correspond pas"
 
-        # Vérifier les attributs du premier profil
+        # Verify the attributes of the first profile
         old_profile1 = next((p for p in old_profiles if p.id == 1), None)
         assert old_profile1 is not None, "Le profil id=1 n'a pas été migré vers l'ancien modèle"
         assert old_profile1.favorite_city == "Paris"
         assert old_profile1.user_id == 1
 
-        # Vérifier que le nouveau modèle a été supprimé
+        # Verify that the new model was deleted
         deleted_models = self.mock_schema_editor.deleted_models
         assert len(deleted_models) == 1, "Le nouveau modèle de profil n'a pas été supprimé"
 
-        # Vérifier le nom de la classe du modèle supprimé
+        # Verify the class name of the deleted model
         deleted_model_names = [model.__name__ for model in deleted_models]
         assert 'NewProfile' in deleted_model_names

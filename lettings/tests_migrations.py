@@ -5,7 +5,7 @@ from django.test import TestCase
 
 def load_migration_module():
     """
-    Charge dynamiquement le module de migration.
+    Dynamically loads the migration module.
     """
     migration_path = os.path.join('lettings', 'migrations', '0002_migrate_data.py')
     spec = importlib.util.spec_from_file_location("migration_module", migration_path)
@@ -16,20 +16,20 @@ def load_migration_module():
 
 class MockModel:
     """
-    Classe de base pour les modèles fictifs utilisés dans les tests.
+    Base class for mock models used in tests.
     """
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     def save(self):
-        """Méthode save simulée"""
+        """Simulated save method"""
         pass
 
 
 class MockQuerySet:
     """
-    Simule un QuerySet Django.
+    Simulates a Django QuerySet.
     """
     def __init__(self, items=None):
         self.items = items or []
@@ -38,11 +38,11 @@ class MockQuerySet:
         return self.items
 
     def get(self, **kwargs):
-        # Simulation simple de .get() - retourne le premier élément correspondant
+        # Simple simulation of .get() - returns the first matching item
         for item in self.items:
             match = True
             for key, value in kwargs.items():
-                # Cas spécial pour address_id qui peut être stocké comme 'address_id' ou comme 'address.id'
+                # Special case for address_id which can be stored as 'address_id' or as 'address.id'
                 if key == 'id' and hasattr(item, 'id') and item.id == value:
                     continue
                 elif not hasattr(item, key) or getattr(item, key) != value:
@@ -54,7 +54,7 @@ class MockQuerySet:
 
 class MockModelManager:
     """
-    Simule un Manager Django.
+    Simulates a Django Manager.
     """
     def __init__(self, model_class, items=None):
         self.model_class = model_class
@@ -69,14 +69,14 @@ class MockModelManager:
 
 class MockAppRegistry:
     """
-    Simule le registre d'applications Django.
+    Simulates the Django application registry.
     """
     def __init__(self):
         self.models = {}
 
     def register_model(self, app_label, model_name, model_class, instances=None):
         """
-        Enregistre un modèle fictif avec des instances optionnelles.
+        Registers a mock model with optional instances.
         """
         key = (app_label, model_name)
         model_class.objects = MockModelManager(model_class, instances)
@@ -84,7 +84,7 @@ class MockAppRegistry:
 
     def get_model(self, app_label, model_name):
         """
-        Récupère un modèle fictif.
+        Retrieves a mock model.
         """
         key = (app_label, model_name)
         return self.models.get(key)
@@ -92,49 +92,49 @@ class MockAppRegistry:
 
 class MockSchemaEditor:
     """
-    Simule le schema editor Django.
+    Simulates the Django schema editor.
     """
     def __init__(self):
         self.deleted_models = []
 
     def delete_model(self, model):
         """
-        Simule la suppression d'un modèle.
+        Simulates model deletion.
         """
         self.deleted_models.append(model)
 
 
 class TestDataMigration(TestCase):
     """
-    Test complet pour la migration de données entre les applications.
+    Complete test for data migration between applications.
     """
 
     def setUp(self):
         """
-        Configure l'environnement de test avec des modèles et des données fictifs.
+        Sets up the test environment with mock models and data.
         """
-        # Créer des classes de modèles fictifs avec des méthodes spéciales
+        # Create mock model classes with special methods
         class OldAddress(MockModel):
             def save(self):
-                # Assurer que l'objet est disponible dans le queryset
+                # Ensure the object is available in the queryset
                 self.objects.queryset.items.append(self)
 
         class OldLetting(MockModel):
             def save(self):
-                # Assurer que l'objet est disponible dans le queryset
+                # Ensure the object is available in the queryset
                 self.objects.queryset.items.append(self)
 
         class NewAddress(MockModel):
             def save(self):
-                # Assurer que l'objet est disponible dans le queryset
+                # Ensure the object is available in the queryset
                 self.objects.queryset.items.append(self)
 
         class NewLetting(MockModel):
             def save(self):
-                # Assurer que l'objet est disponible dans le queryset
+                # Ensure the object is available in the queryset
                 self.objects.queryset.items.append(self)
 
-        # Créer des instances de données
+        # Create data instances
         self.old_address1 = OldAddress(
             id=1,
             number=1,
@@ -169,15 +169,15 @@ class TestDataMigration(TestCase):
             address_id=2
         )
 
-        # S'assurer que les objets address ont également leurs ID accessibles
-        # pour la fonction get() dans forward_func
+        # Ensure that address objects also have their IDs accessible
+        # for the get() function in forward_func
         for addr in [self.old_address1, self.old_address2]:
             addr.pk = addr.id
 
-        # Créer le registre d'apps fictif
+        # Create the mock app registry
         self.mock_apps = MockAppRegistry()
 
-        # Enregistrer les modèles avec leurs instances
+        # Register models with their instances
         self.mock_apps.register_model('oc_lettings_site', 'Address', OldAddress,
                                       [self.old_address1, self.old_address2])
         self.mock_apps.register_model('oc_lettings_site', 'Letting', OldLetting,
@@ -185,26 +185,26 @@ class TestDataMigration(TestCase):
         self.mock_apps.register_model('lettings', 'Address', NewAddress)
         self.mock_apps.register_model('lettings', 'Letting', NewLetting)
 
-        # Créer un schema editor fictif
+        # Create a mock schema editor
         self.mock_schema_editor = MockSchemaEditor()
 
-        # Charger les fonctions de migration
+        # Load migration functions
         self.migration_module = load_migration_module()
         self.forward_func = self.migration_module.forward_func
         self.reverse_func = self.migration_module.reverse_func
 
     def test_forward_migration(self):
         """
-        Test la migration en avant (de oc_lettings_site vers lettings).
+        Tests the forward migration (from oc_lettings_site to lettings).
         """
-        # Appeler la fonction de migration
+        # Call the migration function
         self.forward_func(self.mock_apps, self.mock_schema_editor)
 
-        # Vérifier que les modèles NewAddress ont été créés avec les bonnes données
+        # Verify that NewAddress models were created with the correct data
         new_addresses = self.mock_apps.get_model('lettings', 'Address').objects.all()
         assert len(new_addresses) == 2, "Le nombre d'adresses migrées ne correspond pas"
 
-        # Vérifier les attributs de la première adresse
+        # Verify the attributes of the first address
         new_address1 = next((a for a in new_addresses if a.id == 1), None)
         assert new_address1 is not None, "L'adresse id=1 n'a pas été migrée"
         assert new_address1.number == 1
@@ -214,30 +214,30 @@ class TestDataMigration(TestCase):
         assert new_address1.zip_code == 12345
         assert new_address1.country_iso_code == "TST"
 
-        # Vérifier que les modèles NewLetting ont été créés avec les bonnes données
+        # Verify that NewLetting models were created with the correct data
         new_lettings = self.mock_apps.get_model('lettings', 'Letting').objects.all()
         assert len(new_lettings) == 2, "Le nombre de locations migrées ne correspond pas"
 
-        # Vérifier les attributs de la première location
+        # Verify the attributes of the first letting
         new_letting1 = next((l for l in new_lettings if l.id == 1), None)
         assert new_letting1 is not None, "La location id=1 n'a pas été migrée"
         assert new_letting1.title == "Nice Apartment"
 
-        # Vérifier que les anciens modèles ont été supprimés
+        # Verify that the old models were deleted
         deleted_models = self.mock_schema_editor.deleted_models
         assert len(deleted_models) == 2, "Tous les anciens modèles n'ont pas été supprimés"
 
-        # Vérifier les noms des classes des modèles supprimés
+        # Verify the class names of the deleted models
         deleted_model_names = [model.__name__ for model in deleted_models]
         assert 'OldAddress' in deleted_model_names
         assert 'OldLetting' in deleted_model_names
 
     def test_reverse_migration(self):
         """
-        Test la migration inverse (de lettings vers oc_lettings_site).
+        Tests the reverse migration (from lettings to oc_lettings_site).
         """
-        # Pour tester la migration inverse, nous devons d'abord avoir des données dans les nouveaux modèles
-        # Réinitialisons le registre d'apps
+        # To test the reverse migration, we must first have data in the new models
+        # Let's reset the apps registry
         new_address1 = self.mock_apps.get_model('lettings', 'Address')(
             id=1,
             number=1,
@@ -272,15 +272,15 @@ class TestDataMigration(TestCase):
             address_id=2
         )
 
-        # Mettre à jour les instances dans le registre
+        # Update the instances in the registry
         NewAddress = self.mock_apps.get_model('lettings', 'Address')
         NewLetting = self.mock_apps.get_model('lettings', 'Letting')
 
-        # Réinitialiser les collections
+        # Reset the collections
         self.mock_apps.register_model('lettings', 'Address', NewAddress, [])
         self.mock_apps.register_model('lettings', 'Letting', NewLetting, [])
 
-        # Ajouter les instances
+        # Add the instances
         for addr in [new_address1, new_address2]:
             addr.pk = addr.id
             NewAddress.objects.queryset.items.append(addr)
@@ -289,7 +289,7 @@ class TestDataMigration(TestCase):
             letting.pk = letting.id
             NewLetting.objects.queryset.items.append(letting)
 
-        # Réinitialiser les anciennes collections
+        # Reset the old collections
         self.mock_apps.register_model(
             'oc_lettings_site',
             'Address',
@@ -303,36 +303,36 @@ class TestDataMigration(TestCase):
             []
         )
 
-        # Réinitialiser le schema editor
+        # Reset the schema editor
         self.mock_schema_editor = MockSchemaEditor()
 
-        # Appeler la fonction de migration inverse
+        # Call the reverse migration function
         self.reverse_func(self.mock_apps, self.mock_schema_editor)
 
-        # Vérifier que les modèles OldAddress ont été créés avec les bonnes données
+        # Verify that OldAddress models were created with the correct data
         old_addresses = self.mock_apps.get_model('oc_lettings_site', 'Address').objects.all()
         assert len(old_addresses) == 2, "Le nombre d'adresses migrées vers l'ancien modèle ne correspond pas"
 
-        # Vérifier les attributs de la première adresse
+        # Verify the attributes of the first address
         old_address1 = next((a for a in old_addresses if a.id == 1), None)
         assert old_address1 is not None, "L'adresse id=1 n'a pas été migrée vers l'ancien modèle"
         assert old_address1.number == 1
         assert old_address1.street == "123 Main St"
 
-        # Vérifier que les modèles OldLetting ont été créés avec les bonnes données
+        # Verify that OldLetting models were created with the correct data
         old_lettings = self.mock_apps.get_model('oc_lettings_site', 'Letting').objects.all()
         assert len(old_lettings) == 2, "Le nombre de locations migrées vers l'ancien modèle ne correspond pas"
 
-        # Vérifier les attributs de la première location
+        # Verify the attributes of the first letting
         old_letting1 = next((l for l in old_lettings if l.id == 1), None)
         assert old_letting1 is not None, "La location id=1 n'a pas été migrée vers l'ancien modèle"
         assert old_letting1.title == "Nice Apartment"
 
-        # Vérifier que les nouveaux modèles ont été supprimés
+        # Verify that the new models were deleted
         deleted_models = self.mock_schema_editor.deleted_models
         assert len(deleted_models) == 2, "Tous les nouveaux modèles n'ont pas été supprimés"
 
-        # Vérifier les noms des classes des modèles supprimés
+        # Verify the class names of the deleted models
         deleted_model_names = [model.__name__ for model in deleted_models]
         assert 'NewAddress' in deleted_model_names
         assert 'NewLetting' in deleted_model_names
