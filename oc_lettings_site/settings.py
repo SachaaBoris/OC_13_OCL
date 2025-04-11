@@ -1,9 +1,7 @@
 import os
-import sentry_sdk
 from pathlib import Path
 from dotenv import load_dotenv
-from sentry_sdk.integrations.django import DjangoIntegration
-
+from oc_lettings_site.sentry_config import initialize_sentry
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -18,16 +16,7 @@ if DEBUG:
 
 
 # Load Sentry
-sentry_sdk.init(
-    # You can find Sentry log triggers in :
-    # - app.models
-    # - app.views
-    # - oc_lettings_site.signals
-    dsn=os.getenv('SENTRY_DSN'),
-    integrations=[DjangoIntegration()],
-    environment=env_str,
-    send_default_pii=True
-)
+initialize_sentry(env_str)
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -39,6 +28,8 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 
 # Application definition
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
@@ -99,10 +90,10 @@ DATABASES = {
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
 ]
 
 
@@ -132,6 +123,6 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True  # Added injection script protection
     SECURE_CONTENT_TYPE_NOSNIFF = True  # Added injection script protection
     X_FRAME_OPTIONS = 'DENY'  # Added clickjacking protection
-    #SECURE_HSTS_SECONDS = 31536000  # 1 year HTTPS token
-    #SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Adds subdomains
-    #SECURE_HSTS_PRELOAD = True  # Appends the preload directive to the Strict-Transport-Security header
+    # SECURE_HSTS_SECONDS = 31536000  # 1 year HTTPS token
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Adds subdomains
+    # SECURE_HSTS_PRELOAD = True  # Appends the preload directive to the Strict-Transport-Security header

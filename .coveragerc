@@ -1,0 +1,4 @@
+[run]
+omit =
+    */tests_app.py
+    */tests_migrations.py

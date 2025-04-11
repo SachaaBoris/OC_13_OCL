@@ -8,4 +8,4 @@ class OCLettingsSiteConfig(AppConfig):
     name = 'oc_lettings_site'
 
     def ready(self):
-        import oc_lettings_site.signals
+        import oc_lettings_site.signals  # noqa: F401
