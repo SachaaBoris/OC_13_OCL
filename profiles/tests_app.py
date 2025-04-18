@@ -216,14 +216,20 @@ class ProfileTest(TestCase):
             # Apply mocks
             sentry_sdk.capture_exception = mock_capture_exception
             sentry_sdk.capture_message = mock_capture_message
-            self.profile.__class__.__base__.clean = mock_super_clean  # simulate exception in super().clean()
+            self.profile.__class__.__base__.clean = mock_super_clean  # simulate exception
 
             with self.assertRaises(CustomError):
                 self.profile.clean()
 
             # Check Sentry was called properly
-            exception_logged = any(call[0] == 'exception' and isinstance(call[1], CustomError) for call in sentry_calls)
-            message_logged = any(call == ('message', "Erreur de validation dans le modèle Profile") for call in sentry_calls)
+            exception_logged = any(
+                call[0] == 'exception' and isinstance(call[1], CustomError)
+                for call in sentry_calls
+            )
+            message_logged = any(
+                call == ('message', "Erreur de validation dans le modèle Profile")
+                for call in sentry_calls
+            )
 
             self.assertTrue(exception_logged)
             self.assertTrue(message_logged)

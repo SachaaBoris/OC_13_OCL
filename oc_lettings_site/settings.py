@@ -27,10 +27,44 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 
+# Default values for local dev
+default_origins = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000'
+]
+
+
+# If value defined, use it
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', ' '.join(default_origins)).split(' ')
+
+
+# Extract hosts from URLs for ALLOWED_HOSTS
+ALLOWED_HOSTS = []
+for origin in CSRF_TRUSTED_ORIGINS:
+    # Extracting hostname from URL (removes protocol and port)
+    from urllib.parse import urlparse
+    host = urlparse(origin).netloc.split(':')[0]
+    if host:
+        ALLOWED_HOSTS.append(host)
+
+
+# Adding default values for ALLOWED_HOSTS
+ALLOWED_HOSTS.extend(
+    [
+        'localhost',
+        '127.0.0.1'
+    ]
+)
+
+
+# Set by render automatically
+RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+
 # Application definition
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'oc_lettings_site.apps.OCLettingsSiteConfig',
@@ -46,6 +80,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -75,9 +110,8 @@ TEMPLATES = [
 WSGI_APPLICATION = 'oc_lettings_site.wsgi.application'
 
 
-# Database
+# Database setup
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -88,7 +122,6 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
@@ -99,7 +132,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -109,20 +141,15 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
-
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
+WHITENOISE_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+WHITENOISE_MAX_AGE = 0
 
 
-# Production safety switch
+# Production switch
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True  # Force redirection from HTTP to HTTPS
-    SESSION_COOKIE_SECURE = True  # Prevents sessions from being stolen via unsecure HTTP
-    CSRF_COOKIE_SECURE = True  # Prevents sessions from being stolen via unsecure HTTP
-    SECURE_BROWSER_XSS_FILTER = True  # Added injection script protection
-    SECURE_CONTENT_TYPE_NOSNIFF = True  # Added injection script protection
-    X_FRAME_OPTIONS = 'DENY'  # Added clickjacking protection
-    # SECURE_HSTS_SECONDS = 31536000  # 1 year HTTPS token
-    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True  # Adds subdomains
-    # SECURE_HSTS_PRELOAD = True  # Appends the preload directive to the Strict-Transport-Security header
+    STATICFILES_STORAGE = (
+        'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    )  # WhiteNoise

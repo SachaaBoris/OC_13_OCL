@@ -7,6 +7,12 @@
         <div class="col-lg-8">
             <h1 class="page-header-ui-title mb-3 display-6">500 - Server Error</h1>
             <p>Sorry, something went wrong on our side. We're working to fix it.</p>
+			{% if error_message %}
+            <div class="alert alert-danger mt-4">
+                <h4>Error details:</h4>
+                <pre>{{ error_message }}</pre>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

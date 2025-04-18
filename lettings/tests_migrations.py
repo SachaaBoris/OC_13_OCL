@@ -42,7 +42,7 @@ class MockQuerySet:
         for item in self.items:
             match = True
             for key, value in kwargs.items():
-                # Special case for address_id which can be stored as 'address_id' or as 'address.id'
+                # Special case for address_id
                 if key == 'id' and hasattr(item, 'id') and item.id == value:
                     continue
                 elif not hasattr(item, key) or getattr(item, key) != value:
@@ -311,7 +311,9 @@ class TestDataMigration(TestCase):
 
         # Verify that OldAddress models were created with the correct data
         old_addresses = self.mock_apps.get_model('oc_lettings_site', 'Address').objects.all()
-        assert len(old_addresses) == 2, "Le nombre d'adresses migrées vers l'ancien modèle ne correspond pas"
+        assert len(old_addresses) == 2, (
+            "Le nombre d'adresses migrées vers l'ancien modèle ne correspond pas"
+        )
 
         # Verify the attributes of the first address
         old_address1 = next((a for a in old_addresses if a.id == 1), None)
@@ -321,7 +323,9 @@ class TestDataMigration(TestCase):
 
         # Verify that OldLetting models were created with the correct data
         old_lettings = self.mock_apps.get_model('oc_lettings_site', 'Letting').objects.all()
-        assert len(old_lettings) == 2, "Le nombre de locations migrées vers l'ancien modèle ne correspond pas"
+        assert len(old_lettings) == 2, (
+            "Le nombre de locations migrées vers l'ancien modèle ne correspond pas"
+        )
 
         # Verify the attributes of the first letting
         old_letting1 = next((l for l in old_lettings if l.id == 1), None)

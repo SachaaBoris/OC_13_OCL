@@ -103,7 +103,8 @@ class AddressModelTest(TestCase):
 
     def test_address_clean_exception_sentry(self):
         """
-        Test that exceptions in the clean() method of the Address model are properly captured by Sentry.
+        Test that exceptions in the clean() method of the Address model
+        are properly captured by Sentry.
         """
         # Backup original sentry functions
         original_capture_exception = sentry_sdk.capture_exception
@@ -139,15 +140,21 @@ class AddressModelTest(TestCase):
             # Apply mocks
             sentry_sdk.capture_exception = mock_capture_exception
             sentry_sdk.capture_message = mock_capture_message
-            address.__class__.__base__.clean = mock_super_clean  # Simulate exception in super().clean()
+            address.__class__.__base__.clean = mock_super_clean  # Simulate exception
 
             # Trigger the clean() method which should catch the exception
             with self.assertRaises(ValidationError):
                 address.clean()
 
             # Check Sentry was called properly
-            exception_logged = any(call[0] == 'exception' and isinstance(call[1], ValidationError) for call in sentry_calls)
-            message_logged = any(call == ('message', "Erreur de validation dans le modèle Address") for call in sentry_calls)
+            exception_logged = any(
+                call[0] == 'exception' and isinstance(call[1], ValidationError)
+                for call in sentry_calls
+            )
+            message_logged = any(
+                call == ('message', "Erreur de validation dans le modèle Address")
+                for call in sentry_calls
+            )
 
             self.assertTrue(exception_logged)
             self.assertTrue(message_logged)
@@ -214,7 +221,8 @@ class LettingModelTest(TestCase):
 
     def test_letting_clean_exception_sentry(self):
         """
-        Test that exceptions in the clean() method of the Letting model are properly captured by Sentry.
+        Test that exceptions in the clean() method of the Letting model
+        are properly captured by Sentry.
         """
         # Backup original sentry functions
         original_capture_exception = sentry_sdk.capture_exception
@@ -247,15 +255,22 @@ class LettingModelTest(TestCase):
             # Apply mocks
             sentry_sdk.capture_exception = mock_capture_exception
             sentry_sdk.capture_message = mock_capture_message
-            letting.__class__.__base__.clean = mock_super_clean  # Simulate exception in super().clean()
+            letting.__class__.__base__.clean = mock_super_clean  # Simulate exception
 
             # Trigger the clean() method which should catch the exception
             with self.assertRaises(CustomError):
                 letting.clean()
 
             # Check Sentry was called properly
-            exception_logged = any(call[0] == 'exception' and isinstance(call[1], CustomError) for call in sentry_calls)
-            message_logged = any(call == ('message', "Erreur de validation dans le modèle Letting") for call in sentry_calls)
+            exception_logged = any(
+                call[0] == 'exception' and isinstance(
+                    call[1], CustomError
+                ) for call in sentry_calls
+            )
+            message_logged = any(
+                call == ('message', "Erreur de validation dans le modèle Letting")
+                for call in sentry_calls
+            )
 
             self.assertTrue(exception_logged)
             self.assertTrue(message_logged)
@@ -315,7 +330,11 @@ class LettingViewTest(TestCase):
         Tests that the detail view returns a 404 response for a non-existent letting.
         """
         # Trouver un ID qui n'existe certainement pas
-        max_id = Letting.objects.all().order_by('-id').first().id if Letting.objects.exists() else 0
+        max_id = (
+            Letting.objects.all().order_by('-id').first().id
+            if Letting.objects.exists()
+            else 0
+        )
         non_existent_id = max_id + 1000
 
         response = self.client.get(reverse('lettings:letting', args=[non_existent_id]))

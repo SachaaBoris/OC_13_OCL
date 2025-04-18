@@ -229,7 +229,9 @@ class TestProfilesMigration(TestCase):
 
         # Verify that profiles were migrated to the old model
         old_profiles = OldProfile.objects.all()
-        assert len(old_profiles) == 2, "Le nombre de profils migrés vers l'ancien modèle ne correspond pas"
+        assert len(old_profiles) == 2, (
+            "Le nombre de profils migrés vers l'ancien modèle ne correspond pas"
+        )
 
         # Verify the attributes of the first profile
         old_profile1 = next((p for p in old_profiles if p.id == 1), None)
