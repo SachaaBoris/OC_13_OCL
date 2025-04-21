@@ -1,4 +1,4 @@
-## Résumé
+# Résumé
 
 <p align="center"><img src="https://github.com/SachaaBoris/OC_13_OCL/blob/main/static/assets/img/logo.png" width="273"/></p>
 Site web d'Orange County Lettings
@@ -151,6 +151,11 @@ SECRET_KEY - SENTRY_KEY
 ```
 - Avoir pushé le repository sur son propre compte GitHub
 
+
+## Documentation
+  
+[Read The Docs](https://oc-13-ocl.readthedocs.io/en/latest/#)
+  
   
 ---  
   
