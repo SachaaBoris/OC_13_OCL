@@ -27,6 +27,7 @@ source_suffix = {
 }
 
 sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('../oc_lettings_site'))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'oc_lettings_site.settings'
 django.setup()
 
