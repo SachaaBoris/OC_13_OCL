@@ -49,6 +49,7 @@ exclude_patterns = [
 master_doc = 'index'
 html_theme = 'alabaster'
 html_static_path = ['_static']
+html_short_title = "OC_Lettings"
 
 # -- Options for language output ---------------------------------------------
 
