@@ -1,4 +1,4 @@
-# Résumé
+# Résumé du Projet
 
 <p align="center"><img src="https://raw.githubusercontent.com/SachaaBoris/OC_13_OCL/main/static/assets/img/logo.png" width="273"/></p>
 Site web d'Orange County Lettings
